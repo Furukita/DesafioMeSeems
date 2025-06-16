@@ -1,0 +1,21 @@
+package com.example.desafiomeseems.data
+
+import android.content.Context
+import com.example.desafiomeseems.R
+import com.example.desafiomeseems.model.Survey
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
+class SurveyRepository(private val context: Context) {
+
+    fun getSurveys(): List<Survey> {
+        val json = fetchSurveys()
+        val type = object : TypeToken<List<Survey>>() {}.type
+        return Gson().fromJson(json, type)
+    }
+
+    private fun fetchSurveys(): String {
+        val inputStream = context.resources.openRawResource(R.raw.surveys)
+        return inputStream.bufferedReader().use { it.readText() }
+    }
+}
