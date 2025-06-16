@@ -12,6 +12,14 @@ class SurveyViewController: UIViewController, UITableViewDataSource, UITableView
     @IBOutlet weak var tableView: UITableView!
 
     private let viewModel = SurveyViewModel()
+    private var isLoadingMore = false
+
+    private let spinner: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView(style: .large)
+        spinner.hidesWhenStopped = true
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        return spinner
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,8 +32,19 @@ class SurveyViewController: UIViewController, UITableViewDataSource, UITableView
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 100
 
-        viewModel.loadSurveys()
-        tableView.reloadData()
+        view.addSubview(spinner)
+        NSLayoutConstraint.activate([
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+
+        spinner.startAnimating()
+        viewModel.loadInitialSurveys { [weak self] in
+            DispatchQueue.main.async {
+                self?.spinner.stopAnimating()
+                self?.tableView.reloadData()
+            }
+        }
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -42,12 +61,36 @@ class SurveyViewController: UIViewController, UITableViewDataSource, UITableView
         cell.configure(with: survey)
         cell.selectionStyle = .none
 
-
         cell.onAnswerTapped = { [weak self] in
             self?.showPopup(for: survey)
         }
 
         return cell
+    }
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let height = scrollView.frame.size.height
+
+        if offsetY > contentHeight - height - 100 {
+            if !isLoadingMore && viewModel.hasMore {
+                loadMoreData()
+            }
+        }
+    }
+
+    private func loadMoreData() {
+        isLoadingMore = true
+        spinner.startAnimating()
+
+        viewModel.loadMoreSurveys { [weak self] in
+            DispatchQueue.main.async {
+                self?.spinner.stopAnimating()
+                self?.isLoadingMore = false
+                self?.tableView.reloadData()
+            }
+        }
     }
 
     private func showPopup(for survey: Survey) {

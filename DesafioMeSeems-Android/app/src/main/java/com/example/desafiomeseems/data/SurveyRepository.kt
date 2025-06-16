@@ -8,10 +8,21 @@ import com.google.gson.reflect.TypeToken
 
 class SurveyRepository(private val context: Context) {
 
-    fun getSurveys(): List<Survey> {
+    private val allSurveys: List<Survey> by lazy {
         val json = fetchSurveys()
         val type = object : TypeToken<List<Survey>>() {}.type
-        return Gson().fromJson(json, type)
+        Gson().fromJson(json, type)
+    }
+
+    fun getSurveys(page: Int, pageSize: Int): List<Survey> {
+        val fromIndex = page * pageSize
+        val toIndex = (fromIndex + pageSize).coerceAtMost(allSurveys.size)
+
+        return if (fromIndex < toIndex) {
+            allSurveys.subList(fromIndex, toIndex)
+        } else {
+            emptyList()
+        }
     }
 
     private fun fetchSurveys(): String {

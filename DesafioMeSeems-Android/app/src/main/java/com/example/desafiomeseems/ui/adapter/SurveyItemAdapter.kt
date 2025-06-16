@@ -11,7 +11,7 @@ import com.example.desafiomeseems.R
 import com.example.desafiomeseems.model.Survey
 
 class SurveyItemAdapter(
-    private val surveyList: List<Survey>
+    private val surveyList: MutableList<Survey>
 ) : RecyclerView.Adapter<SurveyItemAdapter.SurveyViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SurveyViewHolder {
@@ -27,6 +27,12 @@ class SurveyItemAdapter(
 
     override fun getItemCount(): Int = surveyList.size
 
+    fun updateData(newList: List<Survey>) {
+        surveyList.clear()
+        surveyList.addAll(newList)
+        notifyDataSetChanged()
+    }
+
     inner class SurveyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         private val tvTime: TextView = itemView.findViewById(R.id.tvTime)
@@ -41,6 +47,7 @@ class SurveyItemAdapter(
             btnRespond.setOnClickListener {
                 AlertDialog.Builder(itemView.context)
                     .setTitle("Início da pesquisa")
+                    .setMessage("Você selecionou: ${survey.title}")
                     .setPositiveButton("Fechar") { dialog, _ -> dialog.dismiss() }
                     .show()
             }
